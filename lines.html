@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanTraffic - Linhas</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <i class="fas fa-bus me-2"></i>
+                <span class="fw-bold">UrbanTraffic</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-route me-1"></i>Direções
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="lines.html">
+                            <i class="fas fa-subway me-1"></i>Linhas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="configuracoes.html">
+                            <i class="fas fa-cog me-1"></i>Configurações
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="bg-primary text-white py-4">
+        <div class="container text-center">
+            <h1 class="h2 mb-2">
+                <i class="fas fa-subway me-2"></i>
+                Linhas de Transporte
+            </h1>
+            <p class="mb-0">Encontre rapidamente qualquer linha de autocarro ou metro</p>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-search text-primary"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0 ps-0" 
+                                   id="searchLine" placeholder="Ex: 728, Linha Azul...">
+                            <button class="btn btn-primary" type="button" onclick="searchLines()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div id="lineSuggestions" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="container mb-4">
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <button class="btn btn-outline-primary active" onclick="filterLines('all')">
+                <i class="fas fa-layer-group me-1"></i>Todos
+            </button>
+            <button class="btn btn-outline-primary" onclick="filterLines('metro')">
+                <i class="fas fa-subway me-1"></i>Metro
+            </button>
+            <button class="btn btn-outline-primary" onclick="filterLines('bus')">
+                <i class="fas fa-bus me-1"></i>Autocarros
+            </button>
+            <button class="btn btn-outline-primary" onclick="filterLines('train')">
+                <i class="fas fa-train me-1"></i>Comboios
+            </button>
+        </div>
+    </section>
+
+    <!-- Results -->
+    <section class="container my-4">
+        <div class="row g-3" id="linesResults">
+            <!-- Metro Lines -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card line-card h-100 shadow-sm border-0" data-type="metro">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="line-color bg-primary rounded-circle" style="width: 12px; height: 12px;"></div>
+                            <span class="badge bg-primary ms-2">Metro</span>
+                        </div>
+                        <h5 class="card-title mb-3">
+                            <span class="fw-bold">Linha Azul</span>
+                            <small class="text-muted d-block">L001</small>
+                        </h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Aeroporto → Centro</small>
+                                <small class="text-muted">25 min • Frequência: 5 min</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewLine('L001')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card line-card h-100 shadow-sm border-0" data-type="metro">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-warning rounded-circle" style="width: 12px; height: 12px;"></div>
+                            <span class="badge bg-warning text-dark ms-2">Metro</span>
+                        </div>
+                        <h5 class="card-title mb-3">
+                            <span class="fw-bold">Linha Amarela</span>
+                            <small class="text-muted d-block">L002</small>
+                        </h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Amadora → Lisboa</small>
+                                <small class="text-muted">35 min • Frequência: 7 min</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-warning" onclick="viewLine('L002')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card line-card h-100 shadow-sm border-0" data-type="metro">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success rounded-circle" style="width: 12px; height: 12px;"></div>
+                            <span class="badge bg-success ms-2">Metro</span>
+                        </div>
+                        <h5 class="card-title mb-3">
+                            <span class="fw-bold">Linha Verde</span>
+                            <small class="text-muted d-block">L003</small>
+                        </h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Benfica → Oriente</small>
+                                <small class="text-muted">20 min • Frequência: 6 min</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-success" onclick="viewLine('L003')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bus Lines -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card line-card h-100 shadow-sm border-0" data-type="bus">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-info rounded-circle" style="width: 12px; height: 12px;"></div>
+                            <span class="badge bg-info text-dark ms-2">Autocarro</span>
+                        </div>
+                        <h5 class="card-title mb-3">
+                            <span class="fw-bold">728</span>
+                            <small class="text-muted d-block">Autocarro</small>
+                        </h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Centro → Oriente</small>
+                                <small class="text-muted">40 min • Frequência: 15 min</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-info" onclick="viewLine('B001')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card line-card h-100 shadow-sm border-0" data-type="bus">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-info rounded-circle" style="width: 12px; height: 12px;"></div>
+                            <span class="badge bg-info text-dark ms-2">Autocarro</span>
+                        </div>
+                        <h5 class="card-title mb-3">
+                            <span class="fw-bold">4708</span>
+                            <small class="text-muted d-block">Autocarro</small>
+                        </h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Amadora → Lisboa</small>
+                                <small class="text-muted">45 min • Frequência: 20 min</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-info" onclick="viewLine('B002')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card line-card h-100 shadow-sm border-0" data-type="bus">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-info rounded-circle" style="width: 12px; height: 12px;"></div>
+                            <span class="badge bg-info text-dark ms-2">Autocarro</span>
+                        </div>
+                        <h5 class="card-title mb-3">
+                            <span class="fw-bold">2768</span>
+                            <small class="text-muted d-block">Autocarro</small>
+                        </h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Benfica → Oriente</small>
+                                <small class="text-muted">35 min • Frequência: 15 min</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-info" onclick="viewLine('B003')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <small class="text-white-50">© 2026 UrbanTraffic. Todos os direitos reservados.</small>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/lines.js"></script>
+</body>
+</html>
