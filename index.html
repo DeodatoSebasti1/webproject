@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanTraffic - Início</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <i class="fas fa-bus me-2"></i>
+                <span class="fw-bold">UrbanTraffic</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">
+                            <i class="fas fa-route me-1"></i>Direções
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="lines.html">
+                            <i class="fas fa-subway me-1"></i>Linhas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="configuracoes.html">
+                            <i class="fas fa-cog me-1"></i>Configurações
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="bg-primary text-white py-5">
+        <div class="container text-center py-4">
+            <h1 class="display-4 fw-bold mb-3">O seu guia de transporte público</h1>
+            <p class="lead mb-4">Planeie a sua viagem de forma rápida e inteligente</p>
+            <div class="d-flex justify-content-center gap-2">
+                <span class="badge bg-light text-dark p-2">
+                    <i class="fas fa-clock me-1"></i>Tempo Real
+                </span>
+                <span class="badge bg-light text-dark p-2">
+                    <i class="fas fa-map-marked-alt me-1"></i>Rotas Otimizadas
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Panel -->
+ <!-- ================= SEARCH PANEL ================= -->
+    <section class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow p-4">
+                    <h4 class="mb-3">
+                        <i class="fas fa-search text-primary me-2"></i>
+                        Planeie a sua viagem
+                    </h4>
+
+                    <!-- Origem -->
+                    <div class="mb-3 position-relative">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-circle text-success me-2"></i>Origem
+                        </label>
+                        <input class="form-control" id="origin" type="text" 
+                            placeholder="Ex: Aeroporto, Av. Liberdade, Rua Augusta..."
+                            autocomplete="off">
+                        <div id="originSuggestions" class="suggestions-box"></div>
+                    </div>
+
+                    <!-- Destino - CORRIGIDO: agora usa destSuggestions -->
+                    <div class="mb-3 position-relative">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-flag-checkered text-danger me-2"></i>Destino
+                        </label>
+                        <input class="form-control" id="destination" type="text" 
+                            placeholder="Ex: Centro, Praça Marquês, Rua..."
+                            autocomplete="off">
+                        <div id="destinationSuggestions" class="suggestions-box"></div> <!-- ID corrigido -->
+                    </div>
+
+                    <select class="form-select mb-3" id="time">
+                        <option value="now">Partir agora</option>
+                        <option value="later">Partir mais tarde</option>
+                    </select>
+
+                    <button class="btn btn-primary w-100" onclick="searchRoutes()">
+                        <i class="fas fa-search me-2"></i>Pesquisar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Popular Searches -->
+    <section class="container my-5">
+        <h2 class="text-center mb-4">
+            <i class="fas fa-fire text-primary me-2"></i>
+            Pesquisas populares
+        </h2>
+        
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card popular-item h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-plane-departure text-primary fs-1 mb-3"></i>
+                        <h5>Aeroporto → Centro</h5>
+                        <p class="text-muted small">25 min • Direto</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card popular-item h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-train text-primary fs-1 mb-3"></i>
+                        <h5>Amadora → Lisboa</h5>
+                        <p class="text-muted small">35 min • 1 troca</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card popular-item h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-bus text-primary fs-1 mb-3"></i>
+                        <h5>Benfica → Oriente</h5>
+                        <p class="text-muted small">20 min • Direto</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="bg-light py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Como funciona</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex p-3 mb-3">
+                            <i class="fas fa-map-marker-alt fs-3"></i>
+                        </div>
+                        <h4>1. Escolha o trajeto</h4>
+                        <p class="text-muted">Insira origem e destino para encontrar as melhores rotas.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex p-3 mb-3">
+                            <i class="fas fa-chart-line fs-3"></i>
+                        </div>
+                        <h4>2. Compare percursos</h4>
+                        <p class="text-muted">Veja diferentes opções de transporte e escolha a melhor.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex p-3 mb-3">
+                            <i class="fas fa-map fs-3"></i>
+                        </div>
+                        <h4>3. Siga a viagem</h4>
+                        <p class="text-muted">Acompanhe o percurso em tempo real no mapa.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="container my-5">
+        <h2 class="text-center mb-5">Funcionalidades</h2>
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="card h-100 border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <i class="fas fa-route fa-2x text-primary mb-3"></i>
+                        <h6 class="fw-bold">Planeamento</h6>
+                        <small class="text-muted">Rotas otimizadas</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card h-100 border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <i class="fas fa-map-marked-alt fa-2x text-primary mb-3"></i>
+                        <h6 class="fw-bold">Mapa</h6>
+                        <small class="text-muted">Visualização interativa</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card h-100 border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <i class="fas fa-clock fa-2x text-primary mb-3"></i>
+                        <h6 class="fw-bold">Tempo real</h6>
+                        <small class="text-muted">Horários atualizados</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card h-100 border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <i class="fas fa-search fa-2x text-primary mb-3"></i>
+                        <h6 class="fw-bold">Pesquisa</h6>
+                        <small class="text-muted">Linhas e paragens</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white pt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-bus me-2"></i>UrbanTraffic
+                    </h5>
+                    <p class="text-white-50">Planeador inteligente de transporte urbano.</p>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <h6 class="mb-3">App</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="index.html" class="text-white-50 text-decoration-none">Direções</a></li>
+                        <li><a href="lines.html" class="text-white-50 text-decoration-none">Linhas</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Mapa</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h6 class="mb-3">Suporte</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50 text-decoration-none">Ajuda</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Contacto</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h6 class="mb-3">Legal</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50 text-decoration-none">Privacidade</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Termos</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Cookies</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="text-center py-3 text-white-50">
+                <small>© 2026 UrbanTraffic. Todos os direitos reservados.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/search.js"></script>
+</body>
+</html>
