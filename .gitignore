@@ -1,0 +1,3 @@
+# Ignorar a pasta relatorios_individuais
+relatorios_individuais/
+.DS_Store
