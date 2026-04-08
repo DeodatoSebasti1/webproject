@@ -1,0 +1,91 @@
+ <!DOCTYPE html>
+<html lang="pt">
+
+<head>
+
+	<meta charset="UTF-8">
+	<title>Urban Traffic</title>
+
+	<link rel="stylesheet" href="estilo.css">
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+	<style>
+
+		body{
+			font-family: Arial;
+			background:#f4f6f8;
+			padding:40px;
+		}
+
+		#map{
+			height:400px;
+			margin-bottom:30px;
+			border-radius:10px;
+		}
+
+		.card{
+			background:white;
+			padding:15px;
+			margin:10px 0;
+			border-radius:8px;
+			box-shadow:0 2px 6px rgba(0,0,0,0.1);
+		}
+
+	</style>
+
+</head>
+
+<body>
+
+	<h1>Urban Traffic</h1>
+
+	<div id="map"></div>
+
+	<div id="traffic"></div>
+
+	<script>
+
+		const map = L.map('map').setView([38.7223, -9.1393], 13)
+
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			attribution: '&copy; OpenStreetMap contributors'
+		}).addTo(map)
+
+		fetch("backend/traffic.php")
+			.then(response => response.json())
+			.then(data => {
+
+				const container = document.getElementById("traffic")
+
+				data.forEach(item => {
+
+					container.innerHTML += `
+						<div class="card">
+							Linha: ${item.linha}<br>
+							Paragem: ${item.paragem}<br>
+							Estado: ${item.estado}
+						</div>
+					`
+
+					if(item.lat && item.lng){
+
+						L.marker([item.lat, item.lng])
+							.addTo(map)
+							.bindPopup(`
+								Linha: ${item.linha}<br>
+								Paragem: ${item.paragem}
+							`)
+
+					}
+
+				})
+
+			})
+
+	</script>
+
+</body>
+
+</html>
