@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UrbanTraffic - Configurações</title>
+    <script>
+        (function() {
+            try {
+                const darkMode = localStorage.getItem('urban_dark_mode') === 'true';
+                const language = localStorage.getItem('urban_language') || 'pt';
+                document.documentElement.classList.toggle('dark-mode', darkMode);
+                document.documentElement.setAttribute('data-language', language);
+            } catch (error) {}
+        })();
+    </script>
     
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -29,6 +39,73 @@
             font-family: 'Inter', sans-serif;
             background: var(--cinza-claro);
             color: var(--preto-suave);
+        }
+
+        body.dark-mode,
+        body.dark-theme {
+            background: #111827;
+            color: #E5E7EB;
+        }
+
+        body.dark-mode .settings-card,
+        body.dark-mode .modal-content,
+        body.dark-mode .footer-custom,
+        body.dark-mode .navbar-custom,
+        body.dark-mode .form-control,
+        body.dark-mode .form-select,
+        body.dark-theme .settings-card,
+        body.dark-theme .modal-content,
+        body.dark-theme .footer-custom,
+        body.dark-theme .navbar-custom,
+        body.dark-theme .form-control,
+        body.dark-theme .form-select {
+            background: #1F2937 !important;
+            color: #E5E7EB !important;
+            border-color: #374151 !important;
+        }
+
+        body.dark-mode .text-muted,
+        body.dark-mode .small,
+        body.dark-mode .form-label,
+        body.dark-mode .btn-link.text-muted,
+        body.dark-theme .text-muted,
+        body.dark-theme .small,
+        body.dark-theme .form-label,
+        body.dark-theme .btn-link.text-muted {
+            color: #CBD5E1 !important;
+        }
+
+        body.dark-mode .settings-icon,
+        body.dark-theme .settings-icon {
+            background: rgba(76, 175, 80, 0.18);
+        }
+
+        body.dark-mode .settings-card:hover,
+        body.dark-theme .settings-card:hover {
+            border-left-color: var(--verde-urbano);
+        }
+
+        body.dark-mode .navbar,
+        body.dark-theme .navbar {
+            background: #111827 !important;
+        }
+
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode .form-control,
+        body.dark-mode .form-select,
+        body.dark-theme input,
+        body.dark-theme select,
+        body.dark-theme .form-control,
+        body.dark-theme .form-select {
+            background-color: #1F2937 !important;
+            color: #E5E7EB !important;
+            border-color: #374151 !important;
+        }
+
+        body.dark-mode .page-header,
+        body.dark-theme .page-header {
+            background: linear-gradient(135deg, #1f7a35 0%, #2E7D32 100%);
         }
         
         /* Navbar */
@@ -232,7 +309,7 @@
         }
     </style>
 </head>
-<body>
+<body class="ut-page ut-page-settings">
 
     <!-- Navbar -->
     <?php include 'partials/navbar.php'; ?>
@@ -240,11 +317,11 @@
     <!-- Page Header -->
     <section class="page-header">
         <div class="container text-center">
-            <h1 class="h2 mb-2">
+            <h1 class="h2 mb-2" id="settingsPageTitle">
                 <i class="fas fa-cog me-2"></i>
                 Configurações
             </h1>
-            <p class="mb-0">Personalize a sua experiência na aplicação</p>
+            <p class="mb-0" id="settingsPageSubtitle">Personalize a sua experiência na aplicação</p>
         </div>
     </section>
 
@@ -252,6 +329,53 @@
     <section class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">
+
+                <div class="settings-card">
+                    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+                        <div class="d-flex align-items-center">
+                            <div class="settings-icon">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div>
+                            <h5 class="mb-1" id="settingsTitleAccount">Conta UrbanTraffic</h5>
+                                <p class="text-muted small mb-0" id="settingsAuthState">A verificar sessão...</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn-outline-verde ut-btn ut-btn-secondary" id="settingsLoginBtn" type="button" onclick="window.authManager?.showAuthModal()">
+                                <i class="fas fa-sign-in-alt me-1"></i>Entrar
+                            </button>
+                            <button class="btn-outline-verde ut-btn ut-btn-secondary" id="settingsRegisterBtn" type="button" onclick="window.authManager?.showAuthModal('register')">
+                                <i class="fas fa-user-plus me-1"></i>Criar conta
+                            </button>
+                            <a class="btn-outline-verde ut-btn ut-btn-secondary" id="settingsDashboardBtn" href="dashboard.php" data-dashboard-link="settings" style="display:none;">
+                                <i class="fas fa-chart-pie me-1"></i>Dashboard
+                            </a>
+                            <button class="btn-outline-verde ut-btn ut-btn-secondary" id="settingsExportBtn" type="button" onclick="exportUserData()" style="display:none;">
+                                <i class="fas fa-download me-1"></i>Exportar dados
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="settingsProfileFields" class="row g-3 mt-1" style="display:none;">
+                        <div class="col-md-6">
+                            <label for="settingsUserName" class="form-label" id="settingsLabelName">Nome</label>
+                            <input type="text" class="form-control" id="settingsUserName" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="settingsUserEmail" class="form-label" id="settingsLabelEmail">Email</label>
+                            <input type="email" class="form-control" id="settingsUserEmail" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="settingsUserRole" class="form-label" id="settingsLabelRole">Perfil</label>
+                            <input type="text" class="form-control" id="settingsUserRole" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="settingsLastLogin" class="form-label" id="settingsLabelLastLogin">Último acesso</label>
+                            <input type="text" class="form-control" id="settingsLastLogin" readonly>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Idioma (apenas PT/EN) -->
                 <div class="settings-card d-flex align-items-center">
@@ -259,8 +383,8 @@
                         <i class="fas fa-globe"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Idioma / Language</h5>
-                        <p class="text-muted small mb-0">Selecione o seu idioma preferido</p>
+                        <h5 class="mb-1" id="settingsTitleLanguage">Idioma / Language</h5>
+                        <p class="text-muted small mb-0" id="settingsDescLanguage">Selecione o seu idioma preferido</p>
                     </div>
                     <select class="form-select w-auto" id="language">
                         <option value="pt" selected>Português</option>
@@ -274,8 +398,8 @@
                         <i class="fas fa-bell"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Notificações</h5>
-                        <p class="text-muted small mb-0">Receba alertas sobre atrasos e novidades</p>
+                        <h5 class="mb-1" id="settingsTitleNotifications">Notificações</h5>
+                        <p class="text-muted small mb-0" id="settingsDescNotifications">Receba alertas sobre atrasos e novidades</p>
                     </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="notifications" checked>
@@ -288,8 +412,8 @@
                         <i class="fas fa-moon"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Modo Escuro</h5>
-                        <p class="text-muted small mb-0">Ative o tema noturno</p>
+                        <h5 class="mb-1" id="settingsTitleDarkMode">Modo Escuro</h5>
+                        <p class="text-muted small mb-0" id="settingsDescDarkMode">Ative o tema noturno</p>
                     </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="darkMode">
@@ -302,8 +426,8 @@
                         <i class="fas fa-map-marker-alt"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Localização</h5>
-                        <p class="text-muted small mb-0">Permitir acesso à localização para melhores rotas</p>
+                        <h5 class="mb-1" id="settingsTitleLocation">Localização</h5>
+                        <p class="text-muted small mb-0" id="settingsDescLocation">Permitir acesso à localização para melhores rotas</p>
                     </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="location" checked>
@@ -316,8 +440,8 @@
                         <i class="fas fa-chart-line"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Modo Economia de Dados</h5>
-                        <p class="text-muted small mb-0">Reduzir atualizações em tempo real</p>
+                        <h5 class="mb-1" id="settingsTitleDataSaver">Modo Economia de Dados</h5>
+                        <p class="text-muted small mb-0" id="settingsDescDataSaver">Reduzir atualizações em tempo real</p>
                     </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="dataSaver">
@@ -330,10 +454,10 @@
                         <i class="fas fa-info-circle"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Sobre a aplicação</h5>
-                        <p class="text-muted small mb-0">Versão 1.0.0</p>
+                        <h5 class="mb-1" id="settingsTitleAbout">Sobre a aplicação</h5>
+                        <p class="text-muted small mb-0" id="settingsDescAbout">Versão 1.0.0</p>
                     </div>
-                    <button class="btn-outline-verde" onclick="showAbout()">
+                    <button class="btn-outline-verde ut-btn ut-btn-secondary" onclick="showAbout()">
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
@@ -344,10 +468,10 @@
                         <i class="fas fa-question-circle"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Ajuda & FAQ</h5>
-                        <p class="text-muted small mb-0">Tire as suas dúvidas</p>
+                        <h5 class="mb-1" id="settingsTitleHelp">Ajuda & FAQ</h5>
+                        <p class="text-muted small mb-0" id="settingsDescHelp">Tire as suas dúvidas</p>
                     </div>
-                    <button class="btn-outline-verde" onclick="showHelp()">
+                    <button class="btn-outline-verde ut-btn ut-btn-secondary" onclick="showHelp()">
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
@@ -358,10 +482,10 @@
                         <i class="fas fa-file-contract"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Termos e Condições</h5>
-                        <p class="text-muted small mb-0">Leia os nossos termos de uso</p>
+                        <h5 class="mb-1" id="settingsTitleTerms">Termos e Condições</h5>
+                        <p class="text-muted small mb-0" id="settingsDescTerms">Leia os nossos termos de uso</p>
                     </div>
-                    <button class="btn-outline-verde" onclick="showTerms()">
+                    <button class="btn-outline-verde ut-btn ut-btn-secondary" onclick="showTerms()">
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
@@ -372,11 +496,24 @@
                         <i class="fas fa-shield-alt"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Política de Privacidade</h5>
-                        <p class="text-muted small mb-0">Como protegemos os seus dados</p>
+                        <h5 class="mb-1" id="settingsTitlePrivacy">Política de Privacidade</h5>
+                        <p class="text-muted small mb-0" id="settingsDescPrivacy">Como protegemos os seus dados e preferências locais</p>
                     </div>
-                    <button class="btn-outline-verde" onclick="showPrivacy()">
+                    <button class="btn-outline-verde ut-btn ut-btn-secondary" onclick="showPrivacy()">
                         <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div class="settings-card d-flex align-items-center">
+                    <div class="settings-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1" id="settingsTitleDeleteAccount">Eliminar conta</h5>
+                        <p class="text-muted small mb-0" id="settingsDescDeleteAccount">Por segurança, esta opção está em desenvolvimento nesta demo.</p>
+                    </div>
+                    <button class="btn btn-outline-secondary ut-btn ut-btn-secondary" type="button" onclick="showDeleteAccountNotice()">
+                        <i class="fas fa-info-circle me-2"></i>Ver estado
                     </button>
                 </div>
 
@@ -389,24 +526,24 @@
                         <i class="fas fa-trash-alt"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-1 text-danger">Apagar Dados</h5>
-                        <p class="text-muted small mb-0">Remover todo o histórico e configurações</p>
+                        <h5 class="mb-1 text-danger" id="settingsTitleClearData">Apagar Dados</h5>
+                        <p class="text-muted small mb-0" id="settingsDescClearData">Remover todo o histórico e configurações</p>
                     </div>
-                    <button class="btn btn-outline-danger" onclick="clearAllData()">
-                        <i class="fas fa-trash me-2"></i>Apagar
+                    <button class="btn btn-outline-danger ut-btn" onclick="clearAllData()" id="settingsClearButton">
+                        <i class="fas fa-trash me-2"></i><span id="settingsClearButtonText">Apagar</span>
                     </button>
                 </div>
 
                 <!-- Botões de ação -->
                 <div class="d-grid gap-2 mt-4">
-                    <button class="btn-verde btn-lg" onclick="saveSettings()">
-                        <i class="fas fa-save me-2"></i>Guardar Configurações
+                    <button class="btn-verde btn-lg ut-btn ut-btn-primary ut-btn-lg" onclick="saveSettings()" id="settingsSaveButton">
+                        <i class="fas fa-save me-2"></i><span id="settingsSaveButtonText">Guardar Configurações</span>
                     </button>
                 </div>
 
                 <div class="text-center mt-3">
-                    <button class="btn btn-link text-muted" onclick="resetToDefault()">
-                        <i class="fas fa-undo me-2"></i>Restaurar configurações padrão
+                    <button class="btn btn-link text-muted" onclick="resetToDefault()" id="settingsResetButton">
+                        <i class="fas fa-undo me-2"></i><span id="settingsResetButtonText">Restaurar configurações padrão</span>
                     </button>
                 </div>
 
@@ -414,246 +551,13 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer-custom">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center mb-3">
-                        <a class="navbar-brand d-flex align-items-center" href="index.html">
-                            <div class="logo-urbantraffic">
-                            <img src="img/logo.png" height="80">
-                            <span class="fw-bold" style="color: var(--verde-urbano);">Urban</span>
-                            <span class="fw-bold text-white">Traffic</span>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <h6 class="text-white">Links</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="index.html" class="text-white-50">Direções</a></li>
-                        <li><a href="lines.html" class="text-white-50">Linhas</a></li>
-                        <li><a href="configuracoes.html" class="text-white-50">Configurações</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3">
-                    <h6 class="text-white">Informação</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white-50" onclick="showAbout()">Sobre</a></li>
-                        <li><a href="#" class="text-white-50" onclick="showHelp()">Ajuda</a></li>
-                    </ul>
-                </div>
-            </div>
-            <hr class="border-secondary">
-            <div class="text-center text-white-50 small">
-                <i class="fas fa-bus me-2" style="color: var(--verde-urbano);"></i>
-                Dados simulados da Carris Metropolitana • Frontend v1.0
-            </div>
-        </div>
-    </footer>
-
-    <!-- Modal Sobre -->
-    <div class="modal fade" id="aboutModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="background: var(--verde-urbano); color: white;">
-                    <h5 class="modal-title">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Sobre a UrbanTraffic
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-4">
-                        <div class="logo-icon mx-auto mb-3" style="width: 60px; height: 80px;">
-                            <div class="pin-shape"></div>
-                            <div class="buildings"></div>
-                            <div class="road-line"></div>
-                            <div class="traffic-light">
-                                <div class="green-light"></div>
-                            </div>
-                            <div class="signal-waves"></div>
-                            <div class="map-base"></div>
-                        </div>
-                        <h4>UrbanTraffic v1.0.0</h4>
-                        <p class="text-muted">Dados da Carris Metropolitana</p>
-                    </div>
-                    
-                    <h6>Desenvolvedores</h6>
-                    <p>Equipa UrbanTraffic</p>
-                    
-                    <h6>Contacto</h6>
-                    <p>suporte@urbantraffic.pt</p>
-                    
-                    <h6>Fonte de dados</h6>
-                    <p>Carris Metropolitana (GTFS e GTFS-Realtime)</p>
-                    
-                    <hr>
-                    
-                    <p class="small text-muted">
-                        <i class="fas fa-copyright me-1"></i>
-                        2026 UrbanTraffic. Todos os direitos reservados.
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Ajuda -->
-    <div class="modal fade" id="helpModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="background: var(--verde-urbano); color: white;">
-                    <h5 class="modal-title">
-                        <i class="fas fa-question-circle me-2"></i>
-                        Ajuda & FAQ
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="accordion" id="faqAccordion">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                    Como pesquisar rotas?
-                                </button>
-                            </h2>
-                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body">
-                                    Insira a origem e destino nos campos apropriados na página inicial e clique em "Pesquisar". 
-                                    O sistema mostrará as melhores rotas disponíveis da Carris Metropolitana.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                    Os dados são em tempo real?
-                                </button>
-                            </h2>
-                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body">
-                                    Sim, os dados são atualizados a cada 30 segundos através do feed GTFS-Realtime da Carris Metropolitana.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                    Como funciona o mapa?
-                                </button>
-                            </h2>
-                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body">
-                                    O mapa mostra todas as rotas disponíveis e a localização em tempo real dos autocarros. Pode clicar nas paragens para ver horários estimados.
-                                </div>
-                            </div>
-                        </div>
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                                    O que é a Carris Metropolitana?
-                                </button>
-                            </h2>
-                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body">
-                                    A Carris Metropolitana é o operador de transportes públicos que serve a Área Metropolitana de Lisboa, abrangendo 15 municípios.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php include 'partials/footer.php'; ?>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/settings.js"></script>
-    
-    <script>
-        // Funções para configurações
-        function showAbout() {
-            new bootstrap.Modal(document.getElementById('aboutModal')).show();
-        }
-        
-        function showHelp() {
-            new bootstrap.Modal(document.getElementById('helpModal')).show();
-        }
-        
-        function showTerms() {
-            // Simular abertura de termos
-            alert('Termos e Condições da UrbanTraffic\n\nEsta aplicação utiliza dados fornecidos pela Carris Metropolitana. O uso da aplicação implica a aceitação dos termos de serviço.');
-        }
-        
-        function showPrivacy() {
-            // Simular abertura de política de privacidade
-            alert('Política de Privacidade\n\nOs seus dados são armazenados localmente no seu dispositivo. Não recolhemos informações pessoais sem o seu consentimento.');
-        }
-        
-        function saveSettings() {
-            const settings = {
-                language: document.getElementById('language').value,
-                notifications: document.getElementById('notifications').checked,
-                darkMode: document.getElementById('darkMode').checked,
-                location: document.getElementById('location').checked,
-                dataSaver: document.getElementById('dataSaver').checked
-            };
-            
-            localStorage.setItem('userSettings', JSON.stringify(settings));
-            
-            // Aplicar tema escuro se selecionado
-            if (settings.darkMode) {
-                document.body.classList.add('dark-mode');
-            } else {
-                document.body.classList.remove('dark-mode');
-            }
-            
-            // Feedback visual
-            alert('✅ Configurações guardadas com sucesso!');
-        }
-        
-        function clearAllData() {
-            if (confirm('⚠️ Tem a certeza que deseja apagar todos os dados? Esta ação não pode ser desfeita.')) {
-                localStorage.clear();
-                sessionStorage.clear();
-                alert('🗑️ Dados apagados com sucesso!');
-                location.reload();
-            }
-        }
-        
-        function resetToDefault() {
-            if (confirm('Restaurar configurações padrão?')) {
-                document.getElementById('language').value = 'pt';
-                document.getElementById('notifications').checked = true;
-                document.getElementById('darkMode').checked = false;
-                document.getElementById('location').checked = true;
-                document.getElementById('dataSaver').checked = false;
-                
-                saveSettings();
-            }
-        }
-        
-        // Carregar configurações guardadas
-        document.addEventListener('DOMContentLoaded', function() {
-            const saved = localStorage.getItem('userSettings');
-            if (saved) {
-                const settings = JSON.parse(saved);
-                document.getElementById('language').value = settings.language || 'pt';
-                document.getElementById('notifications').checked = settings.notifications !== false;
-                document.getElementById('darkMode').checked = settings.darkMode || false;
-                document.getElementById('location').checked = settings.location !== false;
-                document.getElementById('dataSaver').checked = settings.dataSaver || false;
-            }
-        });
-    </script>
+    <script src="js/preferences.js?v=20260427a"></script>
+    <script src="js/auth.js?v=20260427h"></script>
+    <script src="js/settings.js?v=20260427h"></script>
 </body>
 </html>

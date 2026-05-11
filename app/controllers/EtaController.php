@@ -1,6 +1,6 @@
 <?php
 
-require_once '../app/models/EtaModel.php';
+require_once __DIR__ . '/../models/EtaModel.php';
 
 class EtaController {
 

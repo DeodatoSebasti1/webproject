@@ -1,255 +1,367 @@
-let selectedOrigin = null;
-let selectedDestination = null;
+// /urban/public/js/search.js - Versão corrigida
 
-// ==================== FETCH PLACES (ESTILO GOOGLE MAPS) ====================
-async function fetchPlaces(query) {
+// Debounce
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
-    if (!query || query.length < 3) return [];
+function notifySearch(message, type = 'info') {
+    if (window.UrbanPreferences?.canUseNotifications && !window.UrbanPreferences.canUseNotifications()) {
+        if (type === 'error') {
+            console.error(message);
+        }
+        return;
+    }
 
+    if (typeof window.showToast === 'function') {
+        window.showToast(message, type);
+        return;
+    }
+
+    if (window.App && typeof window.App.showNotification === 'function') {
+        window.App.showNotification(message, type);
+        return;
+    }
+
+    console[type === 'error' ? 'error' : 'warn'](message);
+}
+
+function setSearchFieldState(inputId, isValid, message = '') {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    input.classList.remove('is-valid', 'is-invalid');
+    input.setCustomValidity(message || '');
+
+    if (isValid === true) {
+        input.classList.add('is-valid');
+    } else if (isValid === false) {
+        input.classList.add('is-invalid');
+    }
+
+    const feedback = document.getElementById(`${inputId}Feedback`);
+    if (feedback && message) {
+        feedback.textContent = message;
+    }
+}
+
+function validateSearchFields() {
+    const origin = ($('#origin').val() || '').trim();
+    const destination = ($('#destination').val() || '').trim();
+    const travelDate = ($('#travelDate').val() || '').trim();
+    const departureTime = ($('#departureTime').val() || '').trim();
+    const today = new Date().toISOString().slice(0, 10);
+    let isValid = true;
+
+    setSearchFieldState('origin', null);
+    setSearchFieldState('destination', null);
+
+    if (origin.length < 3) {
+        setSearchFieldState('origin', false, 'Indique uma origem válida com pelo menos 3 caracteres.');
+        isValid = false;
+    } else {
+        setSearchFieldState('origin', true);
+    }
+
+    if (destination.length < 3) {
+        setSearchFieldState('destination', false, 'Indique um destino válido com pelo menos 3 caracteres.');
+        isValid = false;
+    } else if (origin && origin.toLowerCase() === destination.toLowerCase()) {
+        setSearchFieldState('destination', false, 'Origem e destino não podem ser iguais.');
+        isValid = false;
+    } else {
+        setSearchFieldState('destination', true);
+    }
+
+    if (travelDate && travelDate < today) {
+        notifySearch('A data da viagem não pode estar no passado.', 'warning');
+        isValid = false;
+    }
+
+    if (departureTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(departureTime)) {
+        notifySearch('Escolha uma hora válida no formato HH:MM.', 'warning');
+        isValid = false;
+    }
+
+    return isValid;
+}
+
+// Buscar sugestões via backend (evita bloqueios de rede)
+async function fetchAddressSuggestions(query) {
+    if (query.length < 3) return [];
+    
     try {
-        const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=pt&limit=5&addressdetails=1&namedetails=1`
-        );
-
-        if (!res.ok) return [];
-
-        const data = await res.json();
-
-        return data.map(place => {
-            // Formatar nome estilo Google Maps
-            let displayName = '';
-            let secondaryText = '';
-            
-            // Se for uma paragem de autocarro
-            if (place.type === 'bus_stop') {
-                displayName = place.display_name.split(',')[0].trim();
-                // Procurar a localidade
-                if (place.address?.city) secondaryText = place.address.city;
-                else if (place.address?.town) secondaryText = place.address.town;
-                else if (place.address?.village) secondaryText = place.address.village;
-                else if (place.address?.suburb) secondaryText = place.address.suburb;
-            }
-            // Se for aeroporto
-            else if (place.type === 'aerodrome' || place.class === 'aeroway') {
-                displayName = place.display_name.split(',')[0].trim();
-                secondaryText = 'Aeroporto';
-            }
-            // Se for estação de comboio/metro
-            else if (place.type === 'station' || place.type === 'railway') {
-                displayName = place.display_name.split(',')[0].trim();
-                if (place.address?.city) secondaryText = place.address.city;
-                else secondaryText = 'Estação';
-            }
-            // Se for uma rua/avenida
-            else if (place.address?.road) {
-                displayName = place.address.road;
-                // Adicionar número se existir
-                if (place.address?.house_number) {
-                    displayName += `, ${place.address.house_number}`;
-                }
-                // Localidade
-                if (place.address?.city) secondaryText = place.address.city;
-                else if (place.address?.town) secondaryText = place.address.town;
-                else if (place.address?.suburb) secondaryText = place.address.suburb;
-            }
-            // Se for uma cidade/bairro
-            else if (place.address?.city || place.address?.town || place.address?.village) {
-                displayName = place.address.city || place.address.town || place.address.village;
-                if (place.address?.district) {
-                    secondaryText = place.address.district;
-                } else if (place.address?.county) {
-                    secondaryText = place.address.county;
-                }
-            }
-            // Se for um local de interesse
-            else if (place.type === 'attraction' || place.type === 'tourism') {
-                displayName = place.display_name.split(',')[0].trim();
-                if (place.address?.city) secondaryText = place.address.city;
-            }
-            // Fallback: tentar extrair nome limpo
-            else {
-                let parts = place.display_name.split(',');
-                displayName = parts[0].trim();
-                if (parts.length > 1) {
-                    secondaryText = parts[1].trim();
-                }
-            }
-            
-            // Remover caracteres especiais
-            displayName = displayName.replace(/[()]/g, '').trim();
-            secondaryText = secondaryText.replace(/[()]/g, '').trim();
-            
-            return {
-                name: displayName,
-                secondary: secondaryText,
-                full_name: place.display_name,
-                lat: parseFloat(place.lat),
-                lon: parseFloat(place.lon),
-                type: place.type,
-                address: place.address
-            };
-        });
-
-    } catch (e) {
-        console.error("Erro na API:", e);
+        const apiResponse = await fetch(`/urban/public/api/search?q=${encodeURIComponent(query)}`);
+        const data = await apiResponse.json();
+        
+        if (data.error) {
+            console.warn('Erro do proxy:', data.error);
+            return [];
+        }
+        
+        return data;
+    } catch (error) {
+        console.warn('Erro ao buscar sugestões:', error);
         return [];
     }
 }
 
-// ==================== MOSTRAR SUGESTÕES (ESTILO GOOGLE MAPS) ====================
-function showSuggestions(inputId, suggestions) {
+async function resolveAddressToCoords(query) {
+    const trimmedQuery = (query || '').trim();
+    if (trimmedQuery.length < 3) return null;
 
-    const box = $(`#${inputId}Suggestions`);
-    box.empty();
-
-    if (suggestions.length === 0) {
-        box.hide();
-        return;
+    const suggestions = await fetchAddressSuggestions(trimmedQuery);
+    if (!Array.isArray(suggestions) || suggestions.length === 0) {
+        return null;
     }
 
-    suggestions.forEach(s => {
-        // Escolher ícone baseado no tipo
-        let icon = '📍';
-        if (s.type === 'bus_stop') icon = '🚏';
-        else if (s.type === 'aerodrome') icon = '✈️';
-        else if (s.type === 'station' || s.type === 'railway') icon = '🚂';
-        else if (s.address?.road) icon = '🛣️';
-        else if (s.address?.city) icon = '🏙️';
-        
-        const item = $(`
-            <div class="suggestion-item">
-                <div class="suggestion-icon">${icon}</div>
-                <div class="suggestion-info">
-                    <div class="suggestion-title">${s.name}</div>
-                    ${s.secondary ? `<div class="suggestion-subtitle">${s.secondary}</div>` : ''}
-                </div>
-            </div>
-        `);
-
-        item.on("click", function () {
-            selectSuggestion(inputId, s);
-        });
-
-        box.append(item);
+    const normalizedQuery = trimmedQuery.toLowerCase();
+    const exactMatch = suggestions.find((suggestion) => {
+        const display = (suggestion.display || '').toLowerCase();
+        const full = (suggestion.full || '').toLowerCase();
+        return display === normalizedQuery || full === normalizedQuery;
     });
 
-    box.show();
-}
+    const bestMatch = exactMatch || suggestions[0];
+    const lat = parseFloat(bestMatch.lat);
+    const lon = parseFloat(bestMatch.lon);
 
-// ==================== SELECIONAR ====================
-function selectSuggestion(inputId, place) {
-
-    // Mostrar apenas o nome principal no input
-    $(`#${inputId}`).val(place.name);
-    $(`#${inputId}Suggestions`).hide();
-
-    if (inputId === "origin") {
-        selectedOrigin = place;
-    } else {
-        selectedDestination = place;
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        return null;
     }
-}
 
-// ==================== DEBOUNCE ====================
-function debounce(fn, delay) {
-    let timeout;
-    return function (...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => fn.apply(this, args), delay);
+    return {
+        lat,
+        lon,
+        display: bestMatch.display || trimmedQuery
     };
 }
 
-// ==================== ESCONDER AO CLICAR FORA ====================
-$(document).on('click', function (e) {
-    if (!$(e.target).closest('.position-relative').length) {
-        $('.suggestions-box').hide();
+// Mostrar sugestões no dropdown
+function showSuggestions(inputId, suggestions) {
+    const suggestionsDiv = $(`#${inputId}Suggestions`);
+    suggestionsDiv.empty();
+    
+    if (suggestions.length > 0) {
+        suggestions.forEach(suggestion => {
+            const icon = getIconForType(suggestion.type || suggestion.class);
+            const typeLabel = getTypeLabel(suggestion.type || suggestion.class);
+            
+            const escapedDisplay = suggestion.display.replace(/'/g, "\\'");
+            
+            const item = $(`
+                <div class="suggestion-item" data-value="${escapedDisplay}" data-lat="${suggestion.lat}" data-lon="${suggestion.lon}">
+                    <i class="fas ${icon}"></i>
+                    <div class="suggestion-info">
+                        <div class="suggestion-title">${suggestion.display}</div>
+                        <div class="suggestion-subtitle">${typeLabel}</div>
+                    </div>
+                </div>
+            `);
+            
+            item.on('click', function() {
+                const value = $(this).data('value');
+                const lat = $(this).data('lat');
+                const lon = $(this).data('lon');
+                selectSuggestion(inputId, value, lat, lon);
+            });
+            
+            suggestionsDiv.append(item);
+        });
+        
+        suggestionsDiv.show();
+    } else {
+        suggestionsDiv.html(`
+            <div class="suggestion-item">
+                <i class="fas fa-location-crosshairs"></i>
+                <div class="suggestion-info">
+                    <div class="suggestion-title">Sem sugestões</div>
+                    <div class="suggestion-subtitle">Experimente um nome de rua, zona ou município</div>
+                </div>
+            </div>
+        `).show();
     }
-});
+}
 
-// ==================== LISTENERS ====================
-$(document).ready(function () {
+// Selecionar sugestão com coordenadas
+function selectSuggestion(inputId, value, lat, lon) {
+    $(`#${inputId}`).val(value);
+    $(`#${inputId}Suggestions`).hide();
+    
+    // Guardar coordenadas selecionadas globalmente
+    if (inputId === 'origin') {
+        window.selectedOriginCoords = { lat: parseFloat(lat), lon: parseFloat(lon) };
+        console.log('📍 Origem selecionada:', window.selectedOriginCoords);
+    } else if (inputId === 'destination') {
+        window.selectedDestinationCoords = { lat: parseFloat(lat), lon: parseFloat(lon) };
+        console.log('📍 Destino selecionado:', window.selectedDestinationCoords);
+    }
+}
 
-    console.log("search.js carregado");
-
-    $('#origin').on('input', debounce(async function () {
-
-        const val = $(this).val();
-
-        const places = await fetchPlaces(val);
-        showSuggestions("origin", places);
-
-    }, 300));
-
-    $('#destination').on('input', debounce(async function () {
-
-        const val = $(this).val();
-
-        const places = await fetchPlaces(val);
-        showSuggestions("destination", places);
-
-    }, 300));
-
-});
-
-// ==================== SEARCH ====================
+// Função principal de pesquisa
 async function searchRoutes() {
-    if (!selectedOrigin || !selectedDestination) {
-        alert("Seleciona origem e destino válidos");
+    const originInput = $('#origin').val().trim();
+    const destinationInput = $('#destination').val().trim();
+    
+    if (!validateSearchFields()) {
+        notifySearch('Corrija os campos da pesquisa antes de continuar.', 'warning');
         return;
     }
-
-    const btn = document.querySelector('.btn-urbano');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>A encontrar paragens...';
-    }
+    
+    const departureTime = $('#departureTime').val();
+    const travelDate = $('#travelDate').val();
+    const $searchBtn = $('#searchBtn');
+    const originalButtonHtml = $searchBtn.html();
 
     try {
-        const originStop = await findNearestStop(selectedOrigin.lat, selectedOrigin.lon);
-        const destStop = await findNearestStop(selectedDestination.lat, selectedDestination.lon);
+        $searchBtn.prop('disabled', true).attr('aria-busy', 'true').html('<span class="loading-spinner me-2"></span>A preparar melhor rota...');
 
-        if (!originStop || !destStop) {
-            alert("Não foi possível encontrar paragens próximas");
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-search me-2"></i>Pesquisar Rotas';
+        let originCoords = window.selectedOriginCoords;
+        let destinationCoords = window.selectedDestinationCoords;
+
+        if (!originCoords || $('#origin').val().trim() !== originInput) {
+            originCoords = await resolveAddressToCoords(originInput);
+            if (originCoords) {
+                window.selectedOriginCoords = { lat: originCoords.lat, lon: originCoords.lon };
+                $('#origin').val(originCoords.display);
             }
+        }
+
+        if (!destinationCoords || $('#destination').val().trim() !== destinationInput) {
+            destinationCoords = await resolveAddressToCoords(destinationInput);
+            if (destinationCoords) {
+                window.selectedDestinationCoords = { lat: destinationCoords.lat, lon: destinationCoords.lon };
+                $('#destination').val(destinationCoords.display);
+            }
+        }
+
+        if (!originCoords || !destinationCoords) {
+            setSearchFieldState('origin', Boolean(originCoords), originCoords ? '' : 'Selecione uma origem sugerida ou reconhecida.');
+            setSearchFieldState('destination', Boolean(destinationCoords), destinationCoords ? '' : 'Selecione um destino sugerido ou reconhecido.');
+            notifySearch('Não foi possível localizar a origem e o destino. Selecione uma sugestão válida antes de continuar.', 'error');
             return;
         }
 
-        console.log("Stop origem:", originStop);
-        console.log("Stop destino:", destStop);
+        const fromLat = originCoords.lat;
+        const fromLon = originCoords.lon;
+        const toLat = destinationCoords.lat;
+        const toLon = destinationCoords.lon;
 
-        const BASE = "/urban/public";
-        window.location.href = `${BASE}/results.php?fromLat=${originStop.stop_lat}&fromLon=${originStop.stop_lon}&toLat=${destStop.stop_lat}&toLon=${destStop.stop_lon}`;
-
-    } catch (error) {
-        console.error("Erro:", error);
-        alert("Erro ao calcular rota");
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-search me-2"></i>Pesquisar Rotas';
+        if (![fromLat, fromLon, toLat, toLon].every(Number.isFinite)) {
+            setSearchFieldState('origin', false, 'As coordenadas selecionadas para a origem são inválidas.');
+            setSearchFieldState('destination', false, 'As coordenadas selecionadas para o destino são inválidas.');
+            notifySearch('As coordenadas da pesquisa são inválidas. Tente novamente e selecione uma sugestão.', 'error');
+            return;
         }
+
+        console.log('🔍 Pesquisando com coordenadas:', { fromLat, fromLon, toLat, toLon });
+
+        window.location.href = `results.php?fromLat=${fromLat}&fromLon=${fromLon}&toLat=${toLat}&toLon=${toLon}&origin=${encodeURIComponent($('#origin').val().trim())}&dest=${encodeURIComponent($('#destination').val().trim())}&travelDate=${encodeURIComponent(travelDate || '')}&departureTime=${encodeURIComponent(departureTime || '')}`;
+    } catch (error) {
+        console.warn('Erro ao preparar pesquisa:', error);
+        notifySearch('Não foi possível preparar a pesquisa neste momento. Tente novamente.', 'error');
+    } finally {
+        $searchBtn.prop('disabled', false).removeAttr('aria-busy').html(originalButtonHtml || '<i class="fas fa-search me-2"></i>Pesquisar Rotas');
     }
 }
 
-// ==================== ENCONTRAR STOP MAIS PRÓXIMO ====================
-async function findNearestStop(lat, lon) {
-    const res = await fetch(`/urban/app/controllers/RouteController.php?findNearestStop=1&lat=${lat}&lon=${lon}`);
-    const data = await res.json();
+// Ícone baseado no tipo
+function getIconForType(type) {
+    const icons = {
+        road: 'fa-road',
+        residential: 'fa-home',
+        commercial: 'fa-building',
+        retail: 'fa-store',
+        pedestrian: 'fa-walking',
+        city: 'fa-city',
+        town: 'fa-city',
+        village: 'fa-tree',
+        suburb: 'fa-map-pin',
+        neighbourhood: 'fa-map-pin',
+        airport: 'fa-plane',
+        station: 'fa-train',
+        bus_stop: 'fa-bus',
+        tram_stop: 'fa-tram',
+        metro: 'fa-subway',
+        attraction: 'fa-camera'
+    };
+    return icons[type] || 'fa-map-marker-alt';
+}
+
+// Label legível
+function getTypeLabel(type) {
+    const labels = {
+        road: 'Rua',
+        residential: 'Residencial',
+        commercial: 'Comercial',
+        retail: 'Loja',
+        pedestrian: 'Rua Pedonal',
+        city: 'Cidade',
+        town: 'Vila',
+        village: 'Aldeia',
+        suburb: 'Bairro',
+        neighbourhood: 'Vizinhança',
+        airport: 'Aeroporto',
+        station: 'Estação',
+        bus_stop: 'Paragem',
+        tram_stop: 'Elétrico',
+        metro: 'Metro',
+        attraction: 'Atração'
+    };
+    return labels[type] || 'Local';
+}
+
+// Configurar autocomplete
+function setupAutocomplete() {
+    const debouncedSearch = debounce(async function(inputId, query) {
+        if (query.length >= 3) {
+            const suggestions = await fetchAddressSuggestions(query);
+            showSuggestions(inputId, suggestions);
+        } else {
+            $(`#${inputId}Suggestions`).hide();
+        }
+    }, 500);
     
-    if (data.status === "success") {
-        return {
-            stop_id: data.stop.stop_id,
-            stop_name: data.stop.stop_name,
-            stop_lat: data.stop.stop_lat,
-            stop_lon: data.stop.stop_lon,
-            walk_distance: data.walk_distance,
-            walk_time: data.walk_time
-        };
-    }
-    return null;
+    $('#origin').on('input', function() {
+        window.selectedOriginCoords = null;
+        setSearchFieldState('origin', null);
+        debouncedSearch('origin', $(this).val());
+    });
+    
+    $('#destination').on('input', function() {
+        window.selectedDestinationCoords = null;
+        setSearchFieldState('destination', null);
+        debouncedSearch('destination', $(this).val());
+    });
+    
+    // Esconder sugestões ao clicar fora
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#origin, #originSuggestions, #destination, #destinationSuggestions').length) {
+            $('#originSuggestions, #destinationSuggestions').hide();
+        }
+    });
 }
 
-// ==================== EXPORT ====================
+// Inicializar quando o DOM estiver pronto
+$(document).ready(function() {
+    console.log('Search module initialized');
+    setupAutocomplete();
+    
+    $('#origin, #destination').on('keypress', function(e) {
+        if (e.which === 13) {
+            searchRoutes();
+        }
+    });
+});
+
+// Exportar funções globais
 window.searchRoutes = searchRoutes;
+window.selectSuggestion = selectSuggestion;

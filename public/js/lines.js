@@ -20,7 +20,7 @@ async function loadLines() {
 
     try {
 
-        const res = await fetch('/urban-traffic/public/lines');
+        const res = await fetch('/urban/public/api/lines');
         const data = await res.json();
 
         if (data.status !== "success") {
@@ -32,7 +32,7 @@ async function loadLines() {
         displayLines(carrisLines);
 
     } catch (e) {
-        console.error(e);
+        console.warn(e);
         $('#linesContainer').html("Erro ao carregar linhas");
     }
 }
@@ -49,16 +49,22 @@ function displayLines(lines) {
     }
 
     lines.forEach(line => {
+        const lineId = line.id || line.line_id || line.short_name || '';
+        const lineName = line.name || line.long_name || line.display_name || line.short_name || 'Linha sem nome';
+        const firstPattern = Array.isArray(line.patterns) ? line.patterns[0] : null;
+        const patternId = line.pattern_id || firstPattern?.id || firstPattern?.pattern_id || firstPattern || lineId;
+        const color = line.color ? `#${line.color.toString().replace('#', '')}` : '#4CAF50';
+        const textColor = line.text_color ? `#${line.text_color.toString().replace('#', '')}` : '#FFFFFF';
 
         const card = `
         <div class="col-md-6 col-lg-4">
-            <div class="card line-card h-100" onclick="viewLineDetails('${line.id}')">
+            <div class="card line-card h-100" onclick="viewLineDetails('${patternId}', '${lineId}')">
 
                 <div class="card-body">
 
                     <div class="d-flex justify-content-between">
-                        <span class="badge bg-success">${line.id}</span>
-                        <strong>${line.name}</strong>
+                        <span class="badge" style="background: ${color}; color: ${textColor};">${lineId}</span>
+                        <strong>${lineName}</strong>
                     </div>
 
                     <div class="mt-2">
@@ -94,6 +100,15 @@ function applyFilters() {
     displayLines(filtered);
 }
 
+window.filterLines = applyFilters;
+
+window.filterByArea = function(area) {
+    currentFilter = area;
+    $('.btn-outline-verde').removeClass('active');
+    $(`.btn-outline-verde[onclick="filterByArea('${area}')"]`).addClass('active');
+    applyFilters();
+};
+
 function setupSearchListeners() {
 
     let debounce;
@@ -110,11 +125,11 @@ function setupSearchListeners() {
 }
 
 // ==================== MODAL ====================
-window.viewLineDetails = async function(lineId) {
+window.viewLineDetails = async function(patternId, lineId = patternId) {
 
     try {
 
-        const res = await fetch(`/urban-traffic/public/line/stops?pattern_id=${lineId}`);
+        const res = await fetch(`/urban/public/api/line/stops?pattern_id=${encodeURIComponent(patternId)}`);
         const data = await res.json();
 
         if (data.status !== "success") throw new Error();
@@ -152,6 +167,12 @@ window.viewLineDetails = async function(lineId) {
         });
 
     } catch (e) {
-        alert("Erro ao carregar paragens");
+        if (typeof window.showToast === 'function') {
+            window.showToast('Erro ao carregar paragens.', 'error');
+        } else if (window.App && typeof window.App.showNotification === 'function') {
+            window.App.showNotification('Erro ao carregar paragens.', 'error');
+        } else {
+            console.warn('Erro ao carregar paragens.');
+        }
     }
 };

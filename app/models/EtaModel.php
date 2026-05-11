@@ -1,6 +1,6 @@
 <?php
 
-require_once '../app/services/CarrisApiService.php';
+require_once __DIR__ . '/../services/CarrisApiService.php';
 
 class EtaModel {
 

@@ -2,7 +2,7 @@
 
 class CarrisApiService {
 
-    private string $baseUrl = 'https://api.carrismetropolitana.pt';
+    private string $baseUrl = 'https://api.carrismetropolitana.pt/v2';
 
     public function get(string $path): mixed {
         $url = $this->baseUrl . $path;

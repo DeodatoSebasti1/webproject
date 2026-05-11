@@ -79,6 +79,10 @@ class StopModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getStops() {
+        return $this->getAllStops();
+    }
+
     /**
      * Buscar paragens por ID
      */

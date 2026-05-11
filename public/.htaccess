@@ -1,0 +1,30 @@
+# /urban/public/.htaccess
+
+RewriteEngine On
+
+# Servir assets diretamente sem passar pelo router
+RewriteRule ^(css|js|img|partials)/ - [L]
+RewriteRule \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ - [L,NC]
+
+# Redirecionar todas as requisições de API para o router
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ router.php [QSA,L]
+
+# Redirecionar requisições diretas para controllers PHP (para compatibilidade)
+RewriteRule ^app/controllers/(.*)\.php$ router.php [QSA,L]
+
+# Se o arquivo não existir (e não for um arquivo estático), redirecionar para router
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !\.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ [NC]
+RewriteRule ^(.*)$ router.php [QSA,L]
+
+# Configurações de segurança
+Options -Indexes
+Options +FollowSymLinks
+
+# Habilitar compressão
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json
+</IfModule>

@@ -96,6 +96,11 @@ const App = {
     },
     
     showNotification: function(message, type = 'info') {
+        if (typeof window.showToast === 'function') {
+            window.showToast(message, type);
+            return;
+        }
+
         const notification = document.createElement('div');
         notification.className = `alert-modern alert-${type} fade-in`;
         notification.innerHTML = `

@@ -1,6 +1,6 @@
 <?php
 
-require_once '../app/models/VehicleModel.php';
+require_once __DIR__ . '/../models/VehicleModel.php';
 
 class VehicleController {
 

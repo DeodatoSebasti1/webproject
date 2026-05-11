@@ -1,6 +1,6 @@
 <?php
 
-require_once '../app/models/StopModel.php';
+require_once __DIR__ . '/../models/StopModel.php';
 
 class StopController {
 
@@ -17,7 +17,7 @@ class StopController {
         try {
             echo json_encode([
                 "status" => "success",
-                "stops" => $this->model->getStops()
+                "stops" => $this->model->getAllStops()
             ]);
 
         } catch (Throwable $e) {
